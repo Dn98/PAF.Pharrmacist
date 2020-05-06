@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharmacist</title>
+  <script src="./js/axios.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="./css/style.css">
+</head>
+
+<body>
+  <div class="topic">Pharmacist</div>
+
+  <div>
+	<button class="accordion">Add more items</button>
+	<div class="panel">
+		<form class="cus_form" id="validate_form">
+ 			<input class="cus_input" id="med_generic_name" type="text" placeholder="Generic name"/>
+ 			<input class="cus_input" id="med_brand_name" type="text" placeholder="Brand name"/>
+ 			<input class="cus_input" id="med_expiration_date" type="date" placeholder="Expiration date"/>
+ 			<input class="cus_input" id="med_unit_price" type="text" placeholder="Unit price" />
+ 			<input class="cus_input" id="med_quantity" type="number" placeholder="Quantity"/>
+		</form>
+	  	<div class="btn_cover">
+			<div class="editStock" onclick="addMedicine()">Add</div>
+		</div>
+	</div>
+
+
+  </div>
+  <div id="error_msg" class="ErrorMessage"></div>
+  <table id="mytable">
+    <thead id="myhead">
+      <tr>
+        <th>ID</th>
+        <th>Generic_name</th>
+        <th>Brand_name</th>
+        <th>Expiration_date</th>
+        <th>Unit_price</th>
+        <th>Quantity</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="mybody">
+    </tbody>
+  </table>
+
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script>
+ 	getMedicineStock();
+    function getMedicineStock() {
+      axios({
+        method: 'get',
+        url: 'http://localhost:8080/final/rest/medicine'
+      }).then(function(response) {
+        var finaldata = response.data.Data;
+        var finalerror = response.data.Error;
+        var tbody = document.getElementById("mybody");
+        cleanData();
+        if (finalerror.error_code == 0) {
+          for (let i = 0; i < finaldata.length; i++) {
+            var row = tbody.insertRow(i);
+            row.insertCell(0).innerHTML = finaldata[i].id;
+            row.insertCell(1).innerHTML = finaldata[i].generic_name;
+            row.insertCell(2).innerHTML = finaldata[i].brand_name;
+            row.insertCell(3).innerHTML = finaldata[i].expiration_date;
+            row.insertCell(4).innerHTML = finaldata[i].unit_price;
+            row.insertCell(5).innerHTML = finaldata[i].quantity;
+            row.insertCell(6).innerHTML = 
+            "<div class=\"actionBtnCover\">" 
+            +"<span class=\"updateBtn\" onclick=\"updateMe(\'" + finaldata[i].id + "\')\">Update</span>"
+            +"<span class=\"deleteBtn\" onclick=\"deleteMe(\'" + finaldata[i].id + "\')\">Delete</span>"
+            +"</div>";
+          }
+        } else {
+          document.getElementById("error_msg").innerHTML = "Something Went Wrong";
+        }
+
+      }).catch(function(error) {
+    	  document.getElementById("error_msg").innerHTML = "Something Went Wrong";
+      });
+    }
+
+    function cleanData() {
+      var tbody = document.getElementById("mybody");
+      tbody.innerHTML = "";
+    }
+    
+    function goToPage(redirect){
+    	window.location.href = redirect;
+    }
+    
+    function updateMe(id){
+    	sessionStorage.setItem("id", id);
+    	window.location.href = "form.html";
+    }
+    
+    function deleteMe(id){
+        axios.delete('http://localhost:8080/final/rest/medicine/'+id).then(function(response) {
+        	getMedicineStock();
+          }).catch(function(error) {
+        	  document.getElementById("error_msg").innerHTML = "Something Went Wrong";
+          });
+    }
+
+
+    function addMedicine() {
+		axios.post('http://localhost:8080/final/rest/medicine', {
+		   "generic_name": document.getElementById("med_generic_name").value,
+		   "brand_name": document.getElementById("med_brand_name").value,
+		   "expiration_date": document.getElementById("med_expiration_date").value,
+		   "unit_price": document.getElementById("med_unit_price").value,
+		   "quantity": document.getElementById("med_quantity").value
+		 }).then(function(response) {
+		   getMedicineStock();
+		 }).catch(function(error) {
+			 document.getElementById("error_msg").innerHTML = "Something Went Wrong";
+		 });
+    }
+  </script>
+  <script>
+		var acc = document.getElementsByClassName("accordion");
+		var i;
+		
+		for (i = 0; i < acc.length; i++) {
+		  acc[i].addEventListener("click", function() {
+		    this.classList.toggle("active");
+		    var panel = this.nextElementSibling;
+		    if (panel.style.maxHeight) {
+		      panel.style.maxHeight = null;
+		    } else {
+		      panel.style.maxHeight = panel.scrollHeight + "px";
+		    } 
+		  });
+		}
+  </script>
+</body>
+
+</html>
